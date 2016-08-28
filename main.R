@@ -20,9 +20,10 @@ for(tweet in tw.df[[1]]){
 	# remove common words; mix of languages
 	commonWords <- c("the","The","to","of","a","in","is",
 					 "and","","de","by","for","la","has",
-					 "on","se")
+					 "on","se","it","with","that","que",
+					 "al","as")
 	text <- text[!text %in% commonWords]
 	words <- c(words,text)
 }
 
-print(sort(table(words), decreasing=T)[1:25])
+print(sort(table(words), decreasing=T)[1:50])

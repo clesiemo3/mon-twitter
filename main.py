@@ -48,7 +48,7 @@ def db_write(con, record):
 
 class StdOutListener(StreamListener):
     """ A listener handles tweets that are received from the stream.
-    This is a basic listener that just prints received tweets to stdout.
+    Prints basic tweet info and logs items of interest to the database.
     """
     def on_data(self, data):
         try:

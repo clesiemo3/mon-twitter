@@ -53,6 +53,8 @@ class StdOutListener(StreamListener):
     def on_data(self, data):
         try:
             data = data.rstrip('\r\n')
+            data = data.splitlines()
+            data = ' '.join(data)
             dj = json.loads(data)
             db_record = (dj['id_str'],
                          dj['text'],

@@ -1,10 +1,7 @@
--- Table: tweets
-
--- DROP TABLE tweets;
-
-CREATE TABLE tweets
+CREATE TABLE tweetst
 (
   id character varying NOT NULL,
+  tweet character varying,
   username character varying,
   name character varying,
   location character varying,

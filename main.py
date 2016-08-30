@@ -1,23 +1,22 @@
-import os
 import json
 import sys
-from os.path import join, dirname
-from dotenv import load_dotenv
 import tweepy
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 import psycopg2
+# Python Config file config.py in the same directory
+import config
 
 
 def db_start():
     con = None
 
     try:
-        con = psycopg2.connect(database=os.environ.get("DB_NAME"),
-                               user=os.environ.get("DB_USER"),
-                               host=os.environ.get("DB_HOST"),
-                               password=os.environ.get("DB_PASS"))
+        con = psycopg2.connect(database=config.DB_NAME,
+                               user=config.DB_USER,
+                               host=config.DB_HOST,
+                               password=config.DB_PASS)
         return con
     except psycopg2.DatabaseError as e:
 
@@ -87,14 +86,12 @@ class StdOutListener(StreamListener):
         print(status)
 
 if __name__ == '__main__':
-    dotenv_path = join(dirname(__file__), '.env')
-    load_dotenv(dotenv_path)
     con = db_start()
 
     l = StdOutListener()
-    auth = tweepy.OAuthHandler(os.environ.get("TWITTER_KEY"), os.environ.get("TWITTER_SECRET"))
+    auth = OAuthHandler(config.TWITTER_KEY, config.TWITTER_SECRET)
     auth.secure = True
-    auth.set_access_token(os.environ.get("TWITTER_TOKEN"), os.environ.get("TWITTER_TOKEN_SECRET"))
+    auth.set_access_token(config.TWITTER_TOKEN, config.TWITTER_TOKEN_SECRET)
     api = tweepy.API(auth)
 
     # If the authentication was successful, you should
@@ -102,4 +99,4 @@ if __name__ == '__main__':
     print(api.me().name)
 
     stream = Stream(auth, l)
-    stream.filter(track=['monsanto'])
+    stream.filter(track=config.SEARCH_KEYS)

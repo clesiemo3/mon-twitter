@@ -1,6 +1,6 @@
 import json
 import sys
-from time import sleep
+from datetime import datetime
 import tweepy
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
@@ -74,7 +74,8 @@ class StdOutListener(StreamListener):
                          dj['timestamp_ms']
                          )
             db_write(con, db_record)
-            print("User: %s, Name: %s, Location: %s, Tweet: %s" % (
+            print("[%s] User: %s, Name: %s, Location: %s, Tweet: %s" % (
+                datetime.strftime(datetime.now(), '%Y/%m/%d %H:%M:%S'),
                 dj['user']['screen_name'],
                 dj['user']['name'],
                 dj['user']['location'],
@@ -105,7 +106,9 @@ if __name__ == '__main__':
         try:
             stream.filter(track=config.SEARCH_KEYS)
         except AttributeError as e:
-            print(e)
+            time.print(e)
             sleep(5)
             continue
+        except KeyboardInterrupt:
+            break
 

@@ -1,5 +1,6 @@
 import json
 import sys
+from time import sleep
 import tweepy
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
@@ -99,4 +100,12 @@ if __name__ == '__main__':
     print(api.me().name)
 
     stream = Stream(auth, l)
-    stream.filter(track=config.SEARCH_KEYS)
+
+    while True:
+        try:
+            stream.filter(track=config.SEARCH_KEYS)
+        except AttributeError as e:
+            print(e)
+            sleep(5)
+            continue
+

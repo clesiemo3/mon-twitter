@@ -1,6 +1,7 @@
 import json
 import sys
 from datetime import datetime
+import time
 import tweepy
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
@@ -80,6 +81,7 @@ class StdOutListener(StreamListener):
                 dj['user']['name'],
                 dj['user']['location'],
                 dj['text']))
+
         except KeyError:
             print(data)
         return True
@@ -107,7 +109,7 @@ if __name__ == '__main__':
             stream.filter(track=config.SEARCH_KEYS)
         except AttributeError as e:
             print(e)
-            sleep(5)
+            time.sleep(5)
             continue
         except KeyboardInterrupt:
             break

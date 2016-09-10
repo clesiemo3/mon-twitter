@@ -106,7 +106,7 @@ if __name__ == '__main__':
         try:
             stream.filter(track=config.SEARCH_KEYS)
         except AttributeError as e:
-            time.print(e)
+            print(e)
             sleep(5)
             continue
         except KeyboardInterrupt:

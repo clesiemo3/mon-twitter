@@ -49,4 +49,4 @@ my_corpus <- tm_map(my_corpus, removeWords, my_stop_words)
 my_corpus <- tm_map(my_corpus, stemDocument)
 
 #cloud
-wordcloud(my_corpus, max.words = 50, random.order = FALSE)
+wordcloud(my_corpus, max.words = 50, random.order = FALSE, use.r.layout = T)

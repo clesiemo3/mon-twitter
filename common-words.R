@@ -17,36 +17,32 @@ dat$timestamp_ms <- as.POSIXct(as.numeric(dat$timestamp_ms)/1000, origin="1970-0
 lims <- as.POSIXct(strptime(c("2016-09-11 00:00","2016-09-16 23:59"), tz=monsanto_tz, format = "%Y-%m-%d %H:%M"))
 dat <- dat %>% filter(timestamp_ms >= lims[[1]] & timestamp_ms <= lims[[2]])
 
-
 words <- sapply(dat$tweet, split_tweet, USE.NAMES=F)
+words <- sapply(words,tolower,USE.NAMES = F)
 words_ul <- as.character(unlist(words))
+words_ul <- gsub("#","",words_ul)
 
 built_in_stop <- unlist(sapply(top_lang$tweet_lang, stopwords))
 # remove twitter links/RT words
-twitter_words <- c("t","co","http","https","RT","amp")
+twitter_words <- c("t","co","http","https","rt","amp","#")
 # common words
 common_words <- c("the","The","to","of","a","in","is",
-				 "and","","de","by","for","la","has",
-				 "on","se","it","with","that","que",
-				 "al","as","y","en","s","t","el","es",
-				 "A","at","S","r","un","m","U","n","por",
-				 "d","te","via","le","an","I","La","para",
-				 "los","-")
+				  "and","","de","by","for","la","has",
+				  "on","se","it","with","that","que",
+				  "al","as","y","en","s","t","el","es",
+				  "a","at","S","r","un","m","u","n","por",
+				  "d","te","via","le","an","i","la","para",
+				  "los","-")
 my_stop_words <- c(built_in_stop,twitter_words,common_words)
 
-#corpus-ify
-#294k 1.2Gb
-my_corpus <- Corpus(VectorSource(words))
+words.df <- data.frame(table(words_ul))
+words.df <- words.df %>% rename(words=words_ul)
+words.df$words <- as.character(words.df$words)
+words.filtered <- words.df %>% filter(!words %in% my_stop_words) %>% arrange(-Freq) %>% head(50)
 
-#convert to text doc
-my_corpus <- tm_map(my_corpus, PlainTextDocument)
-
-#remove undesirables
-my_corpus <- tm_map(my_corpus, removePunctuation)
-my_corpus <- tm_map(my_corpus, removeWords, my_stop_words)
-
-#stem
-my_corpus <- tm_map(my_corpus, stemDocument)
-
-#cloud
-wordcloud(my_corpus, max.words = 50, random.order = FALSE, use.r.layout = T)
+# save the image in png format
+png("TweetCloud.png", width=12, height=8, units="in", res=300)
+wordcloud(words.filtered$words,words.filtered$Freq, scale=c(6,.5),
+		  max.words = 25, random.order=F,
+		  colors=brewer.pal(8, "Dark2"))
+dev.off()

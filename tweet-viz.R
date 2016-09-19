@@ -78,4 +78,8 @@ gplot3 <- plot_dat %>% ggplot(aes(timestamp_ms)) +
 					 labels=date_format("%H", tz=monsanto_tz),
 					 limits=lims)
 
+png("TweetStats.png", width=12, height=8, units="in", res=300)
 grid.arrange(gplot1, gplot2, gplot3, layout_matrix=rbind(c(1,2),3), top="Tweets containing monsanto, gmo, and bayer", nrow = 2)
+dev.off()
+
+#source("common-words.R")

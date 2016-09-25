@@ -15,3 +15,12 @@ DB_PASS = password
 DB_HOST = 192.168.1.1
 SEARCH_KEYS = ['monsanto', 'gmo']
 ```
+
+R code uses the following .Renviron file:
+
+```
+TWITTER_KEY=
+TWITTER_SECRET=
+DB_USER=
+DB_PASS=
+```

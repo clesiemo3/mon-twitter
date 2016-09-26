@@ -35,8 +35,8 @@ def db_write(con, record):
         query = 'INSERT INTO tweets( ' \
                 'id, tweet, username, name, location, url, followers_count, friends_count, ' \
                 'listed_count, favourites_count, statuses_count, user_lang, favorited, ' \
-                'retweeted, tweet_lang, timestamp_ms) ' \
-                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'
+                'retweeted, tweet_lang, timestamp_ms, retweet) ' \
+                'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'
         cur.execute(query, record)
         con.commit()
         cur.close()
@@ -57,6 +57,10 @@ class StdOutListener(StreamListener):
             data = data.splitlines()
             data = ' '.join(data)
             dj = json.loads(data)
+            try:
+                retweet = dj['retweeted_status']['text']
+            except:
+                retweet = ""
             db_record = (dj['id_str'],
                          dj['text'],
                          dj['user']['screen_name'],
@@ -72,7 +76,8 @@ class StdOutListener(StreamListener):
                          dj['favorited'],
                          dj['retweeted'],
                          dj['lang'],
-                         dj['timestamp_ms']
+                         dj['timestamp_ms'],
+                         retweet
                          )
             db_write(con, db_record)
             print("[%s] User: %s, Name: %s, Location: %s, Tweet: %s" % (

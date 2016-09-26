@@ -1,4 +1,4 @@
-CREATE TABLE tweetst
+CREATE TABLE tweets
 (
   id character varying NOT NULL,
   tweet character varying,

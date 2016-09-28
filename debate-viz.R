@@ -69,7 +69,7 @@ start_dt <- as.POSIXct(strptime("2016-09-26 20:00",tz=cst, format = "%Y-%m-%d %H
 finish_dt <- as.POSIXct(strptime("2016-09-26 21:30",tz=cst, format = "%Y-%m-%d %H:%M"))
 gplot2 <- plot_dat %>% ggplot(aes(timestamp_ms)) +
 	geom_line(stat="bin", bins=50) +
-	labs(x="Hour", y="Number of Tweets") +
+	labs(x="Hour (CST)", y="Number of Tweets") +
 	geom_vline(xintercept = as.numeric(start_dt)) +
 	geom_vline(xintercept = as.numeric(finish_dt)) +
 	ggtitle("Tweets During and After Debate") +
@@ -85,12 +85,12 @@ gplot3 <- plot_dat %>% ggplot(aes(timestamp_ms, color = "All Tweets")) +
 	geom_line(stat="bin", bins=50) +
 	geom_line(data = plot_dat[plot_dat$trump,], stat="bin", bins=50, aes(timestamp_ms, color = "Trump")) +
 	geom_line(data = plot_dat[plot_dat$clinton,], stat="bin", bins=50, aes(timestamp_ms, color = "Clinton")) +
-	labs(x="Time", y="Number of Tweets") +
+	labs(x="Time (CST)", y="Number of Tweets") +
 	ggtitle("Tweets During Debate") +
 	scale_y_continuous(breaks=seq(0,50000,1000), labels=scales::comma) +
 	scale_colour_manual("Tweet Mentions",
 						breaks = c("All Tweets", "Trump", "Clinton"),
-						values = c("black", "red", "blue")) +
+						values = c("black", "blue", "red")) +
 	scale_x_datetime(breaks=date_breaks("10 min"),
 					 labels=date_format("%H:%M", tz=cst),
 					 limits=lims)

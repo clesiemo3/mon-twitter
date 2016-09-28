@@ -96,7 +96,7 @@ gplot3 <- plot_dat %>% ggplot(aes(timestamp_ms, color = "All Tweets")) +
 					 limits=lims)
 
 png("DebateTweetStats.png", width=12, height=8, units="in", res=300)
-grid.arrange(gplot1, gplot2, gplot3, layout_matrix=rbind(c(1,2),3), top="Tweets containing monsanto, gmo, and bayer", nrow = 2)
+grid.arrange(gplot1, gplot2, gplot3, layout_matrix=rbind(c(1,2),3), top="Tweets about the first presidential debate", nrow = 2)
 dev.off()
 
 ##################
@@ -113,7 +113,7 @@ split_tweet <- function(tweet){
 	return(text)
 }
 
-lims <- as.POSIXct(strptime(c("2016-09-26 20:00","2016-09-27 12:00"), tz=cst, format = "%Y-%m-%d %H:%M"))
+lims <- as.POSIXct(strptime(c("2016-09-26 20:00","2016-09-26 21:30"), tz=cst, format = "%Y-%m-%d %H:%M"))
 plot_dat <- dat %>% filter(timestamp_ms > lims[[1]] & timestamp_ms < lims[[2]])
 
 words <- sapply(plot_dat$combined, split_tweet, USE.NAMES=F)
@@ -137,12 +137,12 @@ my_stop_words <- c(built_in_stop,twitter_words,common_words)
 words.df <- data.frame(table(words_ul))
 words.df <- words.df %>% rename(words=words_ul)
 words.df$words <- as.character(words.df$words)
-words.filtered <- words.df %>% filter(!words %in% my_stop_words) %>% arrange(-Freq) %>% head(50)
+words.filtered <- words.df %>% filter(!words %in% my_stop_words) %>% arrange(-Freq) %>% head(100)
 
 # save the image in png format
 png("DebateTweetCloud.png", width=12, height=8, units="in", res=300)
 wordcloud(words.filtered$words,words.filtered$Freq, scale=c(6,.5),
-		  max.words = 25, random.order=F,
+		  max.words = 50, random.order=F,
 		  colors=brewer.pal(8, "Dark2"))
 dev.off()
 

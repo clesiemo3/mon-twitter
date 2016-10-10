@@ -2,6 +2,8 @@ import json
 import sys
 from datetime import datetime
 import time
+import logging
+import traceback
 import tweepy
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
@@ -26,6 +28,7 @@ def db_start():
             con.rollback()
 
         print('Error %s' % e)
+        logging.error(e)
         sys.exit(1)
 
 
@@ -45,6 +48,7 @@ def db_write(con, record):
         if con:
             con.rollback()
         print('Error %s' % e)
+        logging.error(e)
 
 
 class StdOutListener(StreamListener):
@@ -61,6 +65,7 @@ class StdOutListener(StreamListener):
                 retweet = dj['retweeted_status']['text']
             except:
                 retweet = ""
+
             db_record = (dj['id_str'],
                          dj['text'],
                          dj['user']['screen_name'],
@@ -80,21 +85,23 @@ class StdOutListener(StreamListener):
                          retweet
                          )
             db_write(con, db_record)
-            print("[%s] User: %s, Name: %s, Location: %s, Tweet: %s" % (
-                datetime.strftime(datetime.now(), '%Y/%m/%d %H:%M:%S'),
-                dj['user']['screen_name'],
-                dj['user']['name'],
-                dj['user']['location'],
-                dj['text']))
+            #print("[%s] User: %s, Name: %s, Location: %s, Tweet: %s" % (
+            #    datetime.strftime(datetime.now(), '%Y/%m/%d %H:%M:%S'),
+            #    dj['user']['screen_name'],
+            #    dj['user']['name'],
+            #    dj['user']['location'],
+            #    dj['text']))
 
-        except KeyError:
-            print(data)
+        except KeyError as e:
+            pass
         return True
 
     def on_error(self, status):
         print(status)
+        logging.error(status)
 
 if __name__ == '__main__':
+    logging.basicConfig(filename="twitter.log", level=logging.DEBUG)
     con = db_start()
 
     l = StdOutListener()
@@ -114,8 +121,19 @@ if __name__ == '__main__':
             stream.filter(track=config.SEARCH_KEYS)
         except AttributeError as e:
             print(e)
+            logging.warning(e)
             time.sleep(5)
             continue
         except KeyboardInterrupt:
+            logging.info("Script complete.")
             break
+        except IncompleteRead as e:
+            print(e)
+            logging.warning(e)
+            time.sleep(5)
+            continue
+        except Exception as e:
+            logging.error(traceback.format_exc())
+            time.sleep(5)
+            continue
 

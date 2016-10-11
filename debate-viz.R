@@ -14,18 +14,12 @@ get_data <- function(){
 					 password=Sys.getenv("DB_PASS"),
 					 port="5432")
 	on.exit(dbDisconnect(con))
-	res <- dbSendQuery(con, "select tweet, retweet, tweet_lang, timestamp_ms from tweets where create_dt >= (now() - '1 day'::INTERVAL);")
+	on.exit(dbUnloadDriver(drv), add = TRUE)
+
+	res <- dbSendQuery(con, "select tweet, retweet, tweet_lang, timestamp_ms from tweets where create_dt >= (now() - '2 day'::INTERVAL);")
 
 	data <- dbFetch(res)
 
-	#Clearing the result
-	dbClearResult(res)
-
-	#Function: dbClearResult (package DBI)
-	res="PostgreSQLResult"
-
-	#disconnect
-	dbUnloadDriver(drv)
 	return(data)
 }
 
@@ -51,7 +45,7 @@ top <- top_lang$n[[1]]
 digits <- 10 ** (nchar(top)-2)
 cap <- ceiling(top/digits)*digits
 
-lims <- as.POSIXct(strptime(c("2016-09-26 20:00","2016-09-27 12:00"), tz=cst, format = "%Y-%m-%d %H:%M"))
+lims <- as.POSIXct(strptime(c("2016-10-09 20:00","2016-10-10 12:00"), tz=cst, format = "%Y-%m-%d %H:%M"))
 plot_dat <- dat %>% filter(timestamp_ms > lims[[1]] & timestamp_ms < lims[[2]])
 plot_dat <- dat %>% filter(tweet_lang %in% top_lang$tweet_lang) %>% select(tweet_lang)
 gplot1 <- plot_dat %>% ggplot(aes(tweet_lang)) +
@@ -63,7 +57,7 @@ gplot1 <- plot_dat %>% ggplot(aes(tweet_lang)) +
 							   labels=scales::comma)
 
 
-lims <- as.POSIXct(strptime(c("2016-09-26 20:00","2016-09-27 12:00"), tz=cst, format = "%Y-%m-%d %H:%M"))
+lims <- as.POSIXct(strptime(c("2016-10-09 20:00","2016-10-10 08:00"), tz=cst, format = "%Y-%m-%d %H:%M"))
 plot_dat <- dat %>% filter(timestamp_ms > lims[[1]] & timestamp_ms < lims[[2]])
 start_dt <- as.POSIXct(strptime("2016-09-26 20:00",tz=cst, format = "%Y-%m-%d %H:%M"))
 finish_dt <- as.POSIXct(strptime("2016-09-26 21:30",tz=cst, format = "%Y-%m-%d %H:%M"))
@@ -79,7 +73,7 @@ gplot2 <- plot_dat %>% ggplot(aes(timestamp_ms)) +
 					 limits=lims)
 
 
-lims <- as.POSIXct(strptime(c("2016-09-26 20:00","2016-09-26 21:30"), tz=cst, format = "%Y-%m-%d %H:%M"))
+lims <- as.POSIXct(strptime(c("2016-10-09 20:00","2016-10-09 22:30"), tz=cst, format = "%Y-%m-%d %H:%M"))
 plot_dat <- dat %>% filter(timestamp_ms > lims[[1]] & timestamp_ms < lims[[2]])
 gplot3 <- plot_dat %>% ggplot(aes(timestamp_ms, color = "All Tweets")) +
 	geom_line(stat="bin", bins=50) +
@@ -96,7 +90,7 @@ gplot3 <- plot_dat %>% ggplot(aes(timestamp_ms, color = "All Tweets")) +
 					 limits=lims)
 
 png("DebateTweetStats.png", width=12, height=8, units="in", res=300)
-grid.arrange(gplot1, gplot2, gplot3, layout_matrix=rbind(c(1,2),3), top="Tweets about the first presidential debate", nrow = 2)
+grid.arrange(gplot1, gplot2, gplot3, layout_matrix=rbind(c(1,2),3), top="Tweets about the 2nd presidential debate", nrow = 2)
 dev.off()
 
 ##################
@@ -113,13 +107,18 @@ split_tweet <- function(tweet){
 	return(text)
 }
 
-lims <- as.POSIXct(strptime(c("2016-09-26 20:00","2016-09-26 21:30"), tz=cst, format = "%Y-%m-%d %H:%M"))
+lims <- as.POSIXct(strptime(c("2016-10-09 20:00","2016-10-09 22:30"), tz=cst, format = "%Y-%m-%d %H:%M"))
 plot_dat <- dat %>% filter(timestamp_ms > lims[[1]] & timestamp_ms < lims[[2]])
 
 words <- sapply(plot_dat$combined, split_tweet, USE.NAMES=F)
 words <- sapply(words,tolower,USE.NAMES = F)
-words_ul <- as.character(unlist(words))
-words_ul <- gsub("#","",words_ul)
+words.ul <- as.character(unlist(words))
+
+words.clean <- gsub("('|\")+","",words.ul)
+words.clean <- gsub("-","",words.clean)
+hashtags <- grep("#", words.clean, value = TRUE)
+mentions <- grep("@", words.clean, value = TRUE)
+words.clean <- gsub("#","",words.clean)
 
 built_in_stop <- unlist(sapply(top_lang[top_lang$tweet_lang!="und",]$tweet_lang, stopwords))
 # remove twitter links/RT words
@@ -134,10 +133,21 @@ common_words <- c("the","The","to","of","a","in","is",
 				  "los","-")
 my_stop_words <- c(built_in_stop,twitter_words,common_words)
 
-words.df <- data.frame(table(words_ul))
-words.df <- words.df %>% rename(words=words_ul)
-words.df$words <- as.character(words.df$words)
-words.filtered <- words.df %>% filter(!words %in% my_stop_words) %>% arrange(-Freq) %>% head(100)
+
+words.df <- data.frame(table(words.clean))
+words.df <- words.df %>% rename(words=words.clean)
+words.filtered <- words.df %>% filter(!words %in% my_stop_words) %>% arrange(-Freq)
+words.filtered$rank <- 1:nrow(words.filtered)
+
+hashtags.df <- data.frame(table(hashtags))
+hashtags.filtered <- hashtags.df %>%
+	filter(!hashtags %in% my_stop_words, hashtags != "#", !grepl("debate",hashtags)) %>%
+	arrange(-Freq)
+hashtags.filtered$rank <- 1:nrow(hashtags.filtered)
+
+mentions.df <- data.frame(table(mentions))
+mentions.filtered <- mentions.df %>% filter(!mentions %in% my_stop_words, mentions != "@") %>% arrange(-Freq)
+mentions.filtered$rank <- 1:nrow(mentions.filtered)
 
 # save the image in png format
 png("DebateTweetCloud.png", width=12, height=8, units="in", res=300)
@@ -146,3 +156,18 @@ wordcloud(words.filtered$words,words.filtered$Freq, scale=c(6,.5),
 		  colors=brewer.pal(8, "Dark2"))
 dev.off()
 
+# save the image in png format
+png("Debate-Hashtags.png", width=12, height=8, units="in", res=300)
+hashtags.filtered$hashtags <- factor(hashtags.filtered$hashtags, levels = hashtags.filtered$hashtags[order(hashtags.filtered$Freq)])
+hashtags.filtered %>% filter(rank <= 15) %>% ggplot() +
+	geom_bar(aes(hashtags,Freq), stat = "identity") +
+	coord_flip()
+dev.off()
+
+# save the image in png format
+png("Debate-Mentions.png", width=12, height=8, units="in", res=300)
+mentions.filtered$mentions <- factor(mentions.filtered$mentions, levels = mentions.filtered$mentions[order(mentions.filtered$Freq)])
+mentions.filtered %>% filter(rank <= 15) %>% ggplot() +
+	geom_bar(aes(mentions,Freq), stat = "identity") +
+	coord_flip()
+dev.off()

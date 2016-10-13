@@ -101,10 +101,12 @@ class StdOutListener(StreamListener):
         logging.error(status)
 
 if __name__ == '__main__':
-    logging.basicConfig(filename="twitter.log", level=logging.DEBUG)
+    logging.basicConfig(
+        filename="twitter.log", 
+        level=logging.INFO, 
+        format='%(asctime)s [%(name)10s] [%(levelname)s] %(message)s')
     con = db_start()
 
-    l = StdOutListener()
     auth = OAuthHandler(config.TWITTER_KEY, config.TWITTER_SECRET)
     auth.secure = True
     auth.set_access_token(config.TWITTER_TOKEN, config.TWITTER_TOKEN_SECRET)
@@ -113,11 +115,13 @@ if __name__ == '__main__':
     # If the authentication was successful, you should
     # see the name of the account print out
     print(api.me().name)
-
-    stream = Stream(auth, l)
+    logging.info("Starting bot...")
 
     while True:
         try:
+            logging.info("Creating listener and streaming...")
+            l = StdOutListener()
+            stream = Stream(auth, l)
             stream.filter(track=config.SEARCH_KEYS)
         except AttributeError as e:
             print(e)
@@ -127,11 +131,6 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             logging.info("Script complete.")
             break
-        except IncompleteRead as e:
-            print(e)
-            logging.warning(e)
-            time.sleep(5)
-            continue
         except Exception as e:
             logging.error(traceback.format_exc())
             time.sleep(5)
